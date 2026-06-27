@@ -69,24 +69,29 @@ API_EXTERNAL_URL=https://your-domain.com
 SITE_URL=https://your-app.com
 ```
 
-### 2. Generate Keys (Optional - Recommended)
+### 2. Generate Keys (Recommended)
 
-To use asymmetric API keys (ES256), run the generation scripts from the official repository:
+Run the included scripts to generate all required secrets and API keys:
 
 ```bash
-# Clone the official repository just for the scripts
-git clone --depth 1 --filter=blob:none --sparse https://github.com/supabase/supabase
-cd supabase
-git sparse-checkout set docker/utils
-cd docker/utils
+# Step 1: Generate basic secrets (JWT_SECRET, ANON_KEY, SERVICE_ROLE_KEY, passwords, etc.)
+sh utils/generate-keys.sh --update-env
 
-# Generate the keys
-sh generate-keys.sh
-sh add-new-auth-keys.sh
-
-# Copy the generated keys to your .env
-# and add them to your supabase-clean/.env
+# Step 2: Generate asymmetric keys (ES256 key pair, opaque API keys)
+# Requires Node.js >= 16 or Docker
+sh utils/add-new-auth-keys.sh --update-env
 ```
+
+**What gets generated:**
+
+| Script | Variables |
+|--------|-----------|
+| `generate-keys.sh` | `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `SECRET_KEY_BASE`, `VAULT_ENC_KEY`, `PG_META_CRYPTO_KEY`, `LOGFLARE_*`, `S3_*`, `MINIO_ROOT_PASSWORD`, `POSTGRES_PASSWORD`, `DASHBOARD_PASSWORD` |
+| `add-new-auth-keys.sh` | `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `ANON_KEY_ASYMMETRIC`, `SERVICE_ROLE_KEY_ASYMMETRIC`, `JWT_KEYS`, `JWT_JWKS` |
+
+**Prerequisites for `add-new-auth-keys.sh`:**
+- Node.js >= 16 (local), OR
+- Docker (will pull `node:22-alpine` automatically)
 
 ### 3. OAuth (Social Login)
 
@@ -176,6 +181,9 @@ supabase-clean/
 ├── .env                        # Environment variables (DO NOT commit!)
 ├── .env.example                # Variables template
 ├── README.md                   # This file
+├── utils/
+│   ├── generate-keys.sh        # Generate secrets and legacy JWT keys
+│   └── add-new-auth-keys.sh    # Generate asymmetric keys (ES256)
 └── volumes/
     ├── api/
     │   ├── kong.yml            # Kong configuration
